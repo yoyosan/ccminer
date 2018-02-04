@@ -1,24 +1,29 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+    <meta http-equiv="refresh" content="10">
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 	<script src="http://code.highcharts.com/highcharts.js"></script>
 	<script src="http://code.highcharts.com/modules/exporting.js"></script>
 </head>
 <body>
-	<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+    <div id="container-hks" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+    <div id="container-info" style="min-width: 310px; margin: 0 auto; text-align: left">
+        <div id="info" style="float: left; position: relative; left: 30%"></div>
+        <div id="pool" style="float: right; position: relative; right: 30%"></div>
+    </div>
 <script type="text/javascript">
 
 var hashrates = [];
 
 function drawChart(ip) {
 
-	$('#container').highcharts({
+	$('#container-hks').highcharts({
 		chart: {
 			type: 'spline'
 		},
 		title: {
-			text: 'ccMiner WebSocket Sample - ' + ip,
+			text: 'ccMiner KH/s - ' + ip,
 			x: -20 //center
 		},
 		subtitle: {
@@ -90,7 +95,7 @@ function getData(ip, port) {
 						plot.timestamp = parseInt(kv[1], 10);
 					else if (kv[0] === 'KHS')
 						plot.hashrate = parseInt(kv[1], 10) / 1000.0;
-					console.log('Data received: #GPU'+gpu+': '+kv[0]+' = '+kv[1]);
+					// console.log('Data received: #GPU'+gpu+': '+kv[0]+' = '+kv[1]);
 				}
 				if (uid == 0)
 					continue;
@@ -108,12 +113,56 @@ function getData(ip, port) {
 		ws.onerror = function (evt) {
 			var w = evt.target;
 			console.log('Error! readyState=' + w.readyState); //log errors
-			$('#container').html('Error! Unable to get WebSocket data from '+ip); //log errors
+			$('#container-hks').html('Error! Unable to get WebSocket data from '+ip); //log errors
 			return false;
 		};
 		ws.onclose = function() {
 			// websocket is closed.
 		};
+
+        // Extract info about temp and stuff like that
+        var ws = new WebSocket('ws://'+ip+':'+port+'/threads','text');
+        ws.onmessage = function (evt) {
+            var data = evt.data.split('|');
+
+            var content = '';
+            for (n in data) {
+                info = data[n].split(';');
+
+                for (k in info) {
+                    var kv = info[k].split('=');
+
+                    if (kv[0] !== '') {
+                        content += '<strong>' + kv[0] + '</strong>: ' + kv[1] + '<br/>';
+                    }
+                }
+
+            }
+
+            $('#info').html(content);
+        }
+
+        // Extract info about the pool
+        var ws = new WebSocket('ws://'+ip+':'+port+'/pool','text');
+        ws.onmessage = function (evt) {
+            var data = evt.data.split('|');
+
+            var content = '';
+            for (n in data) {
+                pool = data[n].split(';');
+
+                for (k in pool) {
+                    var kv = pool[k].split('=');
+
+                    if (kv[0] !== '') {
+                        content += '<strong>' + kv[0] + '</strong>: ' + kv[1] + '<br/>';
+                    }
+                }
+
+            }
+
+            $('#pool').html(content);
+        }
 	} else {
 		// The browser doesn't support WebSocket
 		alert("WebSocket NOT supported by your Browser!");
@@ -122,7 +171,7 @@ function getData(ip, port) {
 
 $(function () {
 	//getData('192.168.0.110', 4068);
-	getData('localhost', 4068);
+	getData('192.168.1.6', 4068);
 });
 
 </script>
