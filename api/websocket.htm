@@ -1,12 +1,17 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <meta http-equiv="refresh" content="10">
+    <meta http-equiv="refresh" content="120">
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 	<script src="http://code.highcharts.com/highcharts.js"></script>
 	<script src="http://code.highcharts.com/modules/exporting.js"></script>
 </head>
 <body>
+    <div id="container-money" style="min-width: 310px; margin: 0 auto; text-align: center">
+        <div id="coins" style="position: relative"></div>
+        <div id="value" style="position: relative"></div>
+        <div id="total" style="position: relative"></div>
+    </div>
     <div id="container-hks" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
     <div id="container-info" style="min-width: 310px; margin: 0 auto; text-align: left">
         <div id="info" style="float: left; position: relative; left: 30%"></div>
@@ -144,6 +149,7 @@ function getData(ip, port) {
 
         // Extract info about the pool
         var ws = new WebSocket('ws://'+ip+':'+port+'/pool','text');
+        var user = '';
         ws.onmessage = function (evt) {
             var data = evt.data.split('|');
 
@@ -157,11 +163,34 @@ function getData(ip, port) {
                     if (kv[0] !== '') {
                         content += '<strong>' + kv[0] + '</strong>: ' + kv[1] + '<br/>';
                     }
+                    if (kv[0] === 'USER') {
+                        user = kv[1];
+                    }
                 }
 
             }
 
             $('#pool').html(content);
+
+            $.ajax('https://garli.co.in/ext/getbalance/' + user )
+              .done(function(data) {
+                console.log(data);
+                $('#coins').html('<strong>Balance:</strong> ' + data + ' GRLC');
+
+                $.ajax('https://garli.co.in/ext/summary')
+                  .done(function(data2) {
+                    console.log(data2);
+                    var price = data2.data[0].lastUsdPrice;
+                    $('#value').html('<strong>Value:</strong> ' + price + ' USD');
+                    $('#total').html('<strong>Total:</strong> ' + Math.round(data * price, 2) + ' USD');
+                  })
+                  .fail(function() {
+                    console.log( "JSON error" );
+                  });
+              })
+              .fail(function() {
+                console.log( "JSON error" );
+              });
         }
 	} else {
 		// The browser doesn't support WebSocket
