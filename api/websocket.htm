@@ -177,12 +177,12 @@ function getData(ip, port) {
                 console.log(data);
                 $('#coins').html('<strong>Balance:</strong> ' + data + ' GRLC');
 
-                $.ajax('https://garli.co.in/ext/summary')
+                $.ajax('https://widgets.coinmarketcap.com/v1/ticker/garlicoin/?ref=widget&convert=USD')
                   .done(function(data2) {
                     console.log(data2);
-                    var price = data2.data[0].lastUsdPrice;
-                    $('#value').html('<strong>Value:</strong> ' + price + ' USD');
-                    $('#total').html('<strong>Total:</strong> ' + Math.round(data * price, 2) + ' USD');
+                    var price = data2[0].price_usd;
+                    $('#value').html('<strong>Value:</strong> <a href="https://coinmarketcap.com/currencies/garlicoin/">' + price + '</a> USD');
+                    $('#total').html('<strong>Total:</strong> ' + Math.round(data * price) + ' USD');
                   })
                   .fail(function() {
                     console.log( "JSON error" );
