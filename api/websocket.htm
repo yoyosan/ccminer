@@ -7,15 +7,20 @@
 	<script src="http://code.highcharts.com/modules/exporting.js"></script>
 </head>
 <body>
-    <div id="container-money" style="min-width: 310px; margin: 0 auto; text-align: center">
+    <div id="container-money" style="margin: 0 auto; text-align: center">
         <div id="coins" style="position: relative"></div>
         <div id="value" style="position: relative"></div>
         <div id="total" style="position: relative"></div>
     </div>
     <div id="container-hks" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
     <div id="container-info" style="min-width: 310px; margin: 0 auto; text-align: left">
-        <div id="info" style="float: left; position: relative; left: 30%"></div>
-        <div id="pool" style="float: right; position: relative; right: 30%"></div>
+        <div id="info0" style="float: left; margin-right: 5px; positon: relative"></div>
+        <div id="info1" style="float: left; margin-right: 5px; positon: relative"></div>
+        <div id="info2" style="float: left; margin-right: 5px; positon: relative"></div>
+        <div id="info3" style="float: left; margin-right: 5px; positon: relative"></div>
+        <div id="info4" style="float: left; margin-right: 5px; positon: relative"></div>
+        <div id="info5" style="float: left; margin-right: 5px; positon: relative"></div>
+        <div id="pool" style="float: right"></div>
     </div>
 <script type="text/javascript">
 
@@ -130,21 +135,36 @@ function getData(ip, port) {
         ws.onmessage = function (evt) {
             var data = evt.data.split('|');
 
-            var content = '';
+            var content = [];
+            for (i = 0; i < 6; i++) {
+                content[i] = '';
+            }
             for (n in data) {
                 info = data[n].split(';');
 
+                var gpu = 0;
                 for (k in info) {
                     var kv = info[k].split('=');
 
-                    if (kv[0] !== '') {
-                        content += '<strong>' + kv[0] + '</strong>: ' + kv[1] + '<br/>';
+                    if (kv[0] === 'GPU') {
+                        gpu = parseInt(kv[1], 10);
                     }
+                    if (kv[0] === 'POWER') {
+                        kv[1] = kv[1] / 1000 + ' W';
+                    }
+                    if (kv[0] === 'FAN') {
+                        kv[1] = kv[1] + ' %';
+                    }
+                    if (kv[0] !== '') {
+                        content[gpu] += '<strong>' + kv[0] + '</strong>: ' + kv[1] + '<br/>';
+                    }
+
                 }
 
+                for (gpu in content)
+                    $('#info' + gpu).html(content[gpu]);
             }
 
-            $('#info').html(content);
         }
 
         // Extract info about the pool
@@ -167,7 +187,6 @@ function getData(ip, port) {
                         user = kv[1];
                     }
                 }
-
             }
 
             $('#pool').html(content);
